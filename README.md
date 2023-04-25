@@ -1,4 +1,4 @@
-# Mobile App Project (Name TBD)
+# Mobile App Project (HuskyTalk)
 
 ## Authors
 Fred Xu, Andrew Lau, Hon Lin, Niaz Ahamed, and Stephen VanLuven
