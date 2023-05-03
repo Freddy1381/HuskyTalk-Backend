@@ -6,4 +6,4 @@ fi
 echo $MSG
 git add .
 git commit -m "pushme: ${MSG}"
-git push -u origin master
+git push -u origin Sprint_1_master
