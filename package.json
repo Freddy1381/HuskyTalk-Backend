@@ -1,0 +1,31 @@
+{
+  "name": "huskytalk_backend",
+  "version": "1.0.0",
+  "description": "TCSS 450 Project",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Freddy1381/HuskyTalk-Backend"
+  },
+  "scripts": {
+    "dev": "export NODE_ENV=dev|| set NODE_ENV=dev&& node index.js",
+    "local": "export NODE_ENV=local|| set NODE_ENV=local&& node index.js"
+  },
+  "keywords": [
+    "TCSS450",
+    "Mobile",
+    "Apps"
+  ],
+  "author": "TCSS 450 Group 8",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.17.1",
+    "form-data": "^3.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "mysql": "^2.18.1",
+    "npm": "^9.6.5",
+    "pg": "^8.0.2",
+    "pushy": "^3.0.2"
+  }
+}
