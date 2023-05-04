@@ -1,11 +1,16 @@
 //express is the framework we're going to use to handle requests
 const express = require("express");
+const jwt = require("jsonwebtoken");
 
 //Access the connection to Heroku Database
 const pool = require("../utilities").pool;
 
 const validation = require("../utilities").validation;
 let isStringProvided = validation.isStringProvided;
+let containsNumericPassword = validation.containsNumericPassword;
+let containsMixCasePassword = validation.containsMixCasePassword;
+let containsSpecialPassword = validation.containsSpecialPassword;
+let isLengthPassword = validation.isLengthPassword;
 
 const generateHash = require("../utilities").generateHash;
 const generateSalt = require("../utilities").generateSalt;
@@ -30,6 +35,7 @@ const router = express.Router();
  *      "first":"Charles",
  *      "last":"Bryan",
  *      "email":"cfb3@fake.email",
+ *      "username":"charles", 
  *      "password":"test12345"
  *  }
  *
@@ -46,24 +52,29 @@ const router = express.Router();
 router.post(
   "/",
   (request, response, next) => {
-    request.body.username = isStringProvided(request.body.username)
-      ? request.body.username
-      : request.body.email;
-
     //Verify that the caller supplied all the parameters
     //In js, empty strings or null values evaluate to false
     if (
-      isStringProvided(request.body.first) &&
-      isStringProvided(request.body.last) &&
-      isStringProvided(request.body.username) &&
-      isStringProvided(request.body.email) &&
-      isStringProvided(request.body.password)
+      !isStringProvided(request.body.first) &&
+      !isStringProvided(request.body.last) &&
+      !isStringProvided(request.body.username) &&
+      !isStringProvided(request.body.email) &&
+      !isStringProvided(request.body.password)
     ) {
-      next();
-    } else {
       response.status(400).send({
         message: "Missing required information",
       });
+    } else if (
+      !isLengthPassword(request.body.password) || 
+      !containsNumericPassword(request.body.password) ||
+      !containsMixCasePassword(request.body.password) ||
+      !containsSpecialPassword(request.body.password)
+    ) {
+      response.status(400).send({
+        message: "Invalid Password",
+      })
+    } else {
+      next();
     }
   },
   (request, response, next) => {
@@ -114,6 +125,9 @@ router.post(
     let theQuery =
       "INSERT INTO CREDENTIALS(MemberId, SaltedHash, Salt) VALUES ($1, $2, $3)";
     let values = [request.memberid, salted_hash, salt];
+    const token = jwt.sign(
+      { data: 'Token Data' }, 
+      'ourSecretKey', { expiresIn: '10m' });
     pool
       .query(theQuery, values)
       .then((result) => {
@@ -121,18 +135,20 @@ router.post(
         response.status(201).send({
           success: true,
           email: request.body.email,
+          username: request.body.username, 
+          token: token.compact
         });
-        sendEmail(
-          "our.email@lab.com",
-          request.body.email,
-          "Welcome to our App!",
-          "Please verify your Email account."
-        );
+        // sendEmail(
+        //   process.env.BURNER_EMAIL,
+        //   request.body.email,
+        //   "Welcome to our App!", 
+        //   request.body.username,
+        //   token
+        // );
       })
       .catch((error) => {
         //log the error for debugging
-        // console.log("PWD insert")
-        // console.log(error)
+        console.log(error)
 
         /***********************************************************************
          * If we get an error inserting the PWD, we should go back and remove
@@ -148,19 +164,5 @@ router.post(
       });
   }
 );
-
-router.get("/hash_demo", (request, response) => {
-  let password = "hello12345";
-
-  let salt = generateSalt(32);
-  let salted_hash = generateHash(password, salt);
-  let unsalted_hash = generateHash(password);
-
-  response.status(200).send({
-    salt: salt,
-    salted_hash: salted_hash,
-    unsalted_hash: unsalted_hash,
-  });
-});
 
 module.exports = router;

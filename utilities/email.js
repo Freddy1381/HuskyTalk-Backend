@@ -1,22 +1,36 @@
-let sendEmail = (sender, receiver, subject, message) => {
-    //research nodemailer for sending email from node.
-    // https://nodemailer.com/about/
-    // https://www.w3schools.com/nodejs/nodejs_email.asp
-    //create a burner gmail account 
-    //make sure you add the password to the environmental variables
-    //similar to the DATABASE_URL and PHISH_DOT_NET_KEY (later section of the lab)
+const nodemailer = require('nodemailer');
 
-    //fake sending an email for now. Post a message to logs. 
-    console.log("*********************************************************")
-    console.log('To: ' + receiver)
-    console.log('From: ' + sender)
-    console.log('Subject: ' + subject)
-    console.log("_________________________________________________________")
-    console.log(message)
-    console.log("*********************************************************")
+let sendEmail = (sender, receiver, subject, username, jwtoken) => {
 
+    var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: sender,
+        pass: process.env.BURNER_EMAIL_PASSWRD
+    }
+    });
+
+    var mailOptions = {
+    from: sender,
+    to: receiver,
+    subject: subject,
+    text:  `Hi! There, You have recently visited 
+            our website and entered your email.
+            Please follow the given link to verify your email
+            http://localhost:5000/verify/${username}/${jwtoken} 
+            Thanks`
+    };
+
+    transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+        console.log(error);
+    } else {
+        console.log('Email sent: ' + info.response);
+    }
+    });
 }
 
 module.exports = { 
     sendEmail
 }
+
