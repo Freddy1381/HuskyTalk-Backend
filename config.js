@@ -16,7 +16,7 @@ module.exports = {
       : {
           connectionString: process.env.DATABASE_URL,
           ssl: {
-            rejectUnauthorized: true,
+            rejectUnauthorized: false,
           },
         },
   JSON_WEB_TOKEN: process.env.JSON_WEB_TOKEN || undefined

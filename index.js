@@ -26,7 +26,7 @@ app.use('/auth', require('./routes/register.js'));
 
 app.use('/auth', require('./routes/signin.js'));
 
-app.use('/verify-email', require('./routes/verify-email.js'));
+// app.use('/verify-email', require('./routes/verify-email.js'));
 /*
  * Return HTML for the / end point.
  * This is a nice location to document your web service API
