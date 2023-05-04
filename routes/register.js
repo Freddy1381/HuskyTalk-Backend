@@ -138,13 +138,13 @@ router.post(
           username: request.body.username, 
           token: token.compact
         });
-        // sendEmail(
-        //   process.env.BURNER_EMAIL,
-        //   request.body.email,
-        //   "Welcome to our App!", 
-        //   request.body.username,
-        //   token
-        // );
+        sendEmail(
+          process.env.BURNER_EMAIL,
+          request.body.email,
+          "Welcome to our App!", 
+          request.body.username,
+          token
+        );
       })
       .catch((error) => {
         //log the error for debugging
