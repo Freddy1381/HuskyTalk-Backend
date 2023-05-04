@@ -39,17 +39,16 @@ router.get(
     (request, response) => {
       const {token} = request.params;
       const username = request.params.username
-      console.log(username);
 
       //Verify the JWT token
       jwt.verify(token, 'ourSecretKey', function(error, decoded) {
         if (error) {
-          console.log("Verification failed")
+          // console.log("Verification failed")
           response.status(400).send({
             message: error.message
           });
         } else {
-          console.log("Verification successful")
+          // console.log("Verification successful")
           let theQuery =
           "UPDATE MEMBERS SET Verification = 1 WHERE Username = $1";
           let values = [
