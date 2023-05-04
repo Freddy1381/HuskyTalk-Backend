@@ -30,6 +30,7 @@ const router = express.Router();
  *      "first":"Charles",
  *      "last":"Bryan",
  *      "email":"cfb3@fake.email",
+ *      "username":"charles", 
  *      "password":"test12345"
  *  }
  *
@@ -46,10 +47,6 @@ const router = express.Router();
 router.post(
   "/",
   (request, response, next) => {
-    request.body.username = isStringProvided(request.body.username)
-      ? request.body.username
-      : request.body.email;
-
     //Verify that the caller supplied all the parameters
     //In js, empty strings or null values evaluate to false
     if (
@@ -123,7 +120,7 @@ router.post(
           email: request.body.email,
         });
         sendEmail(
-          "our.email@lab.com",
+          process.env.BURNER_EMAIL,
           request.body.email,
           "Welcome to our App!",
           "Please verify your Email account."
@@ -131,8 +128,7 @@ router.post(
       })
       .catch((error) => {
         //log the error for debugging
-        // console.log("PWD insert")
-        // console.log(error)
+        console.log(error)
 
         /***********************************************************************
          * If we get an error inserting the PWD, we should go back and remove
@@ -148,19 +144,5 @@ router.post(
       });
   }
 );
-
-router.get("/hash_demo", (request, response) => {
-  let password = "hello12345";
-
-  let salt = generateSalt(32);
-  let salted_hash = generateHash(password, salt);
-  let unsalted_hash = generateHash(password);
-
-  response.status(200).send({
-    salt: salt,
-    salted_hash: salted_hash,
-    unsalted_hash: unsalted_hash,
-  });
-});
 
 module.exports = router;

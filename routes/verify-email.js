@@ -58,7 +58,7 @@ router.post(
     (request, response, next) => {
         //We're using placeholders ($1, $2) in the SQL query string to avoid SQL Injection
         let theQuery =
-          "UPDATE MEMBERS SET Verified = 1 WHERE Username = $1 AND Email = $2 RETURNING Email, Username";
+          "UPDATE MEMBERS SET Verification = 1 WHERE Username = $1 AND Email = $2 RETURNING Email, Username";
         let values = [
           request.body.username,
           request.body.email,
