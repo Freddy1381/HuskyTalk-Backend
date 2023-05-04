@@ -1,5 +1,6 @@
 //express is the framework we're going to use to handle requests
 const express = require("express");
+const jwt = require("jsonwebtoken");
 
 //Access the connection to Heroku Database
 const pool = require("../utilities").pool;
@@ -111,6 +112,9 @@ router.post(
     let theQuery =
       "INSERT INTO CREDENTIALS(MemberId, SaltedHash, Salt) VALUES ($1, $2, $3)";
     let values = [request.memberid, salted_hash, salt];
+    const token = jwt.sign(
+      { data: 'Token Data' }, 
+      'ourSecretKey', { expiresIn: '10m' });
     pool
       .query(theQuery, values)
       .then((result) => {
@@ -118,12 +122,15 @@ router.post(
         response.status(201).send({
           success: true,
           email: request.body.email,
+          username: request.body.username, 
+          token: token.compact
         });
         sendEmail(
           process.env.BURNER_EMAIL,
           request.body.email,
-          "Welcome to our App!",
-          "Please verify your Email account."
+          "Welcome to our App!", 
+          request.body.username,
+          token
         );
       })
       .catch((error) => {
