@@ -7,6 +7,10 @@ const pool = require("../utilities").pool;
 
 const validation = require("../utilities").validation;
 let isStringProvided = validation.isStringProvided;
+let containsNumericPassword = validation.containsNumericPassword;
+let containsMixCasePassword = validation.containsMixCasePassword;
+let containsSpecialPassword = validation.containsSpecialPassword;
+let isLengthPassword = validation.isLengthPassword;
 
 const generateHash = require("../utilities").generateHash;
 const generateSalt = require("../utilities").generateSalt;
@@ -51,17 +55,26 @@ router.post(
     //Verify that the caller supplied all the parameters
     //In js, empty strings or null values evaluate to false
     if (
-      isStringProvided(request.body.first) &&
-      isStringProvided(request.body.last) &&
-      isStringProvided(request.body.username) &&
-      isStringProvided(request.body.email) &&
-      isStringProvided(request.body.password)
+      !isStringProvided(request.body.first) &&
+      !isStringProvided(request.body.last) &&
+      !isStringProvided(request.body.username) &&
+      !isStringProvided(request.body.email) &&
+      !isStringProvided(request.body.password)
     ) {
-      next();
-    } else {
       response.status(400).send({
         message: "Missing required information",
       });
+    } else if (
+      !isLengthPassword(request.body.password) || 
+      !containsNumericPassword(request.body.password) ||
+      !containsMixCasePassword(request.body.password) ||
+      !containsSpecialPassword(request.body.password)
+    ) {
+      response.status(400).send({
+        message: "Invalid Password",
+      })
+    } else {
+      next();
     }
   },
   (request, response, next) => {
@@ -125,13 +138,13 @@ router.post(
           username: request.body.username, 
           token: token.compact
         });
-        sendEmail(
-          process.env.BURNER_EMAIL,
-          request.body.email,
-          "Welcome to our App!", 
-          request.body.username,
-          token
-        );
+        // sendEmail(
+        //   process.env.BURNER_EMAIL,
+        //   request.body.email,
+        //   "Welcome to our App!", 
+        //   request.body.username,
+        //   token
+        // );
       })
       .catch((error) => {
         //log the error for debugging
