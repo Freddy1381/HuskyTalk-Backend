@@ -6,6 +6,7 @@ dotenv.config({
 });
 
 module.exports = {
+  WEATHER_API_KEY: process.env.WEATHER_API_KEY || "default",
   NODE_ENV: process.env.NODE_ENV || "default",
   PORT: process.env.PORT || 5000,
   DB_OPTIONS:
