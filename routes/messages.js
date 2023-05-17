@@ -8,7 +8,7 @@ const router = express.Router()
 
 const msg_functions = require('../utilities/exports').messaging
 
-const validation = require('../utilities').validation
+const validation = require('../utilities/exports').validation
 let isStringProvided = validation.isStringProvided
 
 /**

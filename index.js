@@ -30,7 +30,7 @@ app.use('/verify', require('./routes/verify-email.js'));
 
 app.use('/weatherCurrent', require('./routes/weather_routes/weatherForecast.js'))
 
-app.use('/messages', middleware.checkToken, require('./routes/messaging.js'))
+app.use('/messages', middleware.checkToken, require('./routes/messages.js'))
 
 app.use('/chats', middleware.checkToken, require('./routes/chats.js'))
 
