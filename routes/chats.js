@@ -379,4 +379,123 @@ router.delete("/:chatId/:email", (request, response, next) => {
     }
 )
 
+/**
+ * @api {get} /chats/ Request to get the list of chats
+ * @apiName GetChats
+ * @apiGroup Chats
+ * 
+ * @apiHeader {String} authorization Valid JSON Web Token JWT
+ * 
+ * @apiSuccess {Object[]} list of chats
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+router.get('/',(request, response) => {
+    let query = 'SELECT ChatId, Name FROM Chats'
+    
+    pool.query(query)
+        .then(result => {
+            response.status(200).send({
+                success: true,
+                chats: result.rows
+            })
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+})
+
+/**
+ * @api {delete} /chats/:chatId?/ Request delete a chat along with all the messages
+ * @apiName DeleteChats
+ * @apiGroup Chats
+ * 
+ * @apiDescription Deletes the messages and the associated chat.
+ * 
+ * @apiHeader {String} authorization Valid JSON Web Token JWT
+ * 
+ * @apiParam {Number} chatId the chat to delete
+ * 
+ * @apiSuccess {boolean} success true when the chat and messages are deleted
+ * 
+ * @apiError (404: Chat Not Found) {String} message "chatID not found"
+ * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+router.delete("/:chatId", (request, response, next) => {
+    //validate on empty parameters
+    if (!request.params.chatId) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    } else if (isNaN(request.params.chatId)) {
+        response.status(400).send({
+            message: "Malformed parameter. chatId must be a number"
+        })
+    } else {
+        next()
+    }
+}, (request, response, next) => {
+    //validate chat id exists
+    let query = 'SELECT * FROM CHATS WHERE ChatId=$1'
+    let values = [request.params.chatId]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(404).send({
+                    message: "Chat ID not found"
+                })
+            } else {
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+}, (request, response) => {
+    //first delete data from tables that have chatid as foreign key constraint
+    let query1 = 'DELETE FROM CHATS WHERE ChatId=$1'
+    let query2 = 'DELETE FROM MESSAGES WHERE ChatId=$1'
+    let query3 = 'DELETE FROM CHATMEMBERS WHERE ChatId=$1'
+    let values = [request.params.chatId]
+
+    pool.query(query2, values)
+        .then(result => {
+            pool.query(query3, values)
+                .then(result => {
+                    pool.query(query1, values)
+                        .then(result => {
+                            response.send({
+                                success: true
+                            })
+                        }).catch(err => {
+                            response.status(400).send({
+                                message: "SQL Error",
+                                error: err
+                            })
+                        })
+                }).catch(err => {
+                    response.status(400).send({
+                        message: "SQL Error",
+                        error: err
+                    })
+                })
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+            })
+        })
+})
+
 module.exports = router
