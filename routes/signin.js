@@ -70,16 +70,50 @@ router.get(
     const [email, password] = credentials.split(":");
 
     if (isStringProvided(email) && isStringProvided(password)) {
-      request.auth = {
-        email: email,
-        password: password,
-      };
       next();
     } else {
       response.status(400).send({
         message: "Malformed Authorization Header",
       });
     }
+  },
+  (request, response, next) => {
+    const theQuery = `SELECT verification FROM Members
+                      WHERE email=$1`;
+    const values = [request.auth.email];
+    pool
+      .query(theQuery, values)
+      .then((result) => {
+        if (result.rowCount == 0) {
+          response.status(404).send({
+            message: "User not found",
+          });
+          return;
+        }
+
+        //Retrieve the verification code from the DB
+        let ver = result.rows[0].verification;
+
+        //Did our salted hash match their salted hash?
+        if (ver == 1) {
+          request.auth = {
+            email: email,
+            password: password,
+          };
+          next();
+        } else {
+          //User email not yet verified
+          response.status(400).send({
+            message: "Email address not yet verified",
+          });
+        }
+      })
+      .catch((err) => {
+        //log the error
+        response.status(400).send({
+          message: err.detail,
+        });
+      });
   },
   (request, response) => {
     const theQuery = `SELECT saltedhash, salt, Credentials.memberid FROM Credentials
