@@ -17,7 +17,7 @@ let sendEmail = (sender, receiver, subject, username, jwtoken) => {
     text:  `Hi! There, You have recently visited 
             our website and entered your email.
             Please follow the given link to verify your email
-            http://localhost:5000/verify/${username}/${jwtoken} 
+            http://huskytalk.herokuapp.com/verify/${username}/${jwtoken} 
             Thanks`
     };
 
