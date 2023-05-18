@@ -33,7 +33,7 @@ router.get(
             console.log('response data', weatherData);
             response.status(200).send(fillJSON(weatherData));
         }).catch(err => {
-            //this is an exception from the actual fetch
+            console.log('response data', err);
             response.status(400).send({
                 message: 'Weather service temporarily unavailable.'
             })
