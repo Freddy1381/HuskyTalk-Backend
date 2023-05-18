@@ -70,6 +70,10 @@ router.get(
     const [email, password] = credentials.split(":");
 
     if (isStringProvided(email) && isStringProvided(password)) {
+      request.auth = {
+        email: email,
+        password: password,
+      };
       next();
     } else {
       response.status(400).send({
