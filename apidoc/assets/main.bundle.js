@@ -43508,11 +43508,11 @@ function init () {
   }
 ]; // eslint-disable-line no-undef
   const apiProject = {
-  "name": "TCSS 450 Lab Web Service",
+  "name": "HuskyTalk",
   "version": "0.1.0",
-  "description": "The TCSS 450 Lab Web Service API Documentation",
-  "title": "Lab API Doc",
-  "url": "localhost:5000",
+  "description": "HuskyTalk Web Service API Documentation",
+  "title": "HuskyTalk API Doc",
+  "url": "huskytalk.herokuapp.com",
   "order": [
     "Hello",
     "Params",
@@ -43526,7 +43526,7 @@ function init () {
   "apidoc": "0.3.0",
   "generator": {
     "name": "apidoc",
-    "time": "Thu May 18 2023 23:14:59 GMT-0700 (Pacific Daylight Time)",
+    "time": "Thu May 18 2023 23:21:03 GMT-0700 (Pacific Daylight Time)",
     "url": "https://apidocjs.com",
     "version": "1.0.1"
   }
