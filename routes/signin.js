@@ -44,6 +44,8 @@ const key = {
  *
  * @apiError (404: User Not Found) {String} message "User not found"
  *
+ * @apiError (404: Email Not Verified) {String} message "Email address not yet verified"
+ *
  * @apiError (400: Invalid Credentials) {String} message "Credentials did not match"
  *
  */

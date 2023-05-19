@@ -126,8 +126,6 @@ router.put("/:chatId/", (request, response, next) => {
     let query = 'SELECT * FROM Members WHERE MemberId=$1'
     let values = [request.decoded.memberid]
 
-console.log(request.decoded)
-
     pool.query(query, values)
         .then(result => {
             if (result.rowCount == 0) {
