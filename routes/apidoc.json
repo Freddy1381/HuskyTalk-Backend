@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "description": "The TCSS 450 Lab Web Service API Documentation",
     "title": "Lab API Doc",
-    "url" : "localhost:5000",
+    "url" : "huskytalk.herokuapp.com",
     "order": [
       "Hello",
       "Params",
