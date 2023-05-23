@@ -33,6 +33,8 @@ const router = express.Router();
  *
  * @apiError (404: User Not Found) {String} message "User not found"
  *
+ * @apiError (404: Email Not Found) {String} message "Email not found"
+ *
  */
 router.get(
     "/:username/:token",

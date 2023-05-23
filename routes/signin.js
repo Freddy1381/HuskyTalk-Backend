@@ -44,6 +44,8 @@ const key = {
  *
  * @apiError (404: User Not Found) {String} message "User not found"
  *
+ * @apiError (404: Email Not Verified) {String} message "Email address not yet verified"
+ *
  * @apiError (400: Invalid Credentials) {String} message "Credentials did not match"
  *
  */
@@ -81,46 +83,8 @@ router.get(
       });
     }
   },
-  (request, response, next) => {
-    const theQuery = `SELECT verification FROM Members
-                      WHERE email=$1`;
-    const values = [request.auth.email];
-    pool
-      .query(theQuery, values)
-      .then((result) => {
-        if (result.rowCount == 0) {
-          response.status(404).send({
-            message: "User not found",
-          });
-          return;
-        }
-
-        //Retrieve the verification code from the DB
-        let ver = result.rows[0].verification;
-
-        //Did our salted hash match their salted hash?
-        if (ver == 1) {
-          request.auth = {
-            email: email,
-            password: password,
-          };
-          next();
-        } else {
-          //User email not yet verified
-          response.status(400).send({
-            message: "Email address not yet verified",
-          });
-        }
-      })
-      .catch((err) => {
-        //log the error
-        response.status(400).send({
-          message: err.detail,
-        });
-      });
-  },
   (request, response) => {
-    const theQuery = `SELECT saltedhash, salt, Credentials.memberid FROM Credentials
+    const theQuery = `SELECT saltedhash, salt, Credentials.memberid, Members.verification FROM Credentials
                       INNER JOIN Members ON
                       Credentials.memberid=Members.memberid 
                       WHERE Members.email=$1`;
@@ -144,8 +108,10 @@ router.get(
         //Generate a hash based on the stored salt and the provided password
         let providedSaltedHash = generateHash(request.auth.password, salt);
 
+        let ver = result.rows[0].verification;
+
         //Did our salted hash match their salted hash?
-        if (storedSaltedHash === providedSaltedHash) {
+        if (storedSaltedHash === providedSaltedHash && ver == 1) {
           //credentials match. get a new JWT
           let token = jwt.sign(
             {
@@ -162,6 +128,11 @@ router.get(
             success: true,
             message: "Authentication successful!",
             token: token,
+          });
+        } else if (ver == 0) {
+          //User email not yet verified
+          response.status(400).send({
+            message: "Email address not yet verified",
           });
         } else {
           //credentials dod not match

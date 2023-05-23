@@ -26,14 +26,15 @@ const router = express.Router();
  *
  * @apiBody {String} first a users first name
  * @apiBody {String} last a users last name
+ * @apiBody {String} username a username *unique
  * @apiBody {String} email a users email *unique
  * @apiBody {String} password a users password
- * @apiBody {String} [username] a username *unique, if none provided, email will be used
  *
  * @apiParamExample {json} Request-Body-Example:
  *  {
  *      "first":"Charles",
  *      "last":"Bryan",
+ *      "username":"cfb3", 
  *      "email":"cfb3@fake.email",
  *      "username":"charles", 
  *      "password":"test12345"
@@ -43,10 +44,14 @@ const router = express.Router();
  * @apiSuccess (Success 201) {String} email the email of the user inserted
  *
  * @apiError (400: Missing Parameters) {String} message "Missing required information"
- *
+ * 
+ * @apiError (400: Invalid Password) {String} message "Invalid password"
+ * 
  * @apiError (400: Username exists) {String} message "Username exists"
- *
+ * 
  * @apiError (400: Email exists) {String} message "Email exists"
+ * 
+ * @apiError (400: Other Error) {String} message "other error, see detail"
  *
  */
 router.post(

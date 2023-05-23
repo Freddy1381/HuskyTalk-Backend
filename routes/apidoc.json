@@ -1,9 +1,9 @@
 {
-    "name": "TCSS 450 Lab Web Service",
+    "name": "HuskyTalk",
     "version": "0.1.0",
-    "description": "The TCSS 450 Lab Web Service API Documentation",
-    "title": "Lab API Doc",
-    "url" : "localhost:5000",
+    "description": "HuskyTalk Web Service API Documentation",
+    "title": "HuskyTalk API Doc",
+    "url" : "huskytalk.herokuapp.com",
     "order": [
       "Hello",
       "Params",
