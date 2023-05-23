@@ -11,7 +11,7 @@ let location;
 const API_URL = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}`;
 
 
-router.get(
+router.post(
     "/",
     (request, response, next) => {
         if(isStringProvided(request.body.location)) {
