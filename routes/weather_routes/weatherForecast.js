@@ -56,6 +56,7 @@ function fillJSON(x) {
     weatherJSON.current.cityName = x.location.name;
     weatherJSON.current.currTemp = x.current.temp_c;
     weatherJSON.current.currCon = x.current.condition.text;
+    weatherJSON.current.currImg = x.current.condition.icon;
 
     //fill JSON property array for 24 hour forecast for current day
     for(let i = 0; i < 24; i++) {
