@@ -64,7 +64,7 @@ function fillJSON(x) {
 
     }
     //fill JSON property array for 7 day forecast past current day
-    for(let i = 0; i < 6; i++) {
+    for(let i = 0; i < 7; i++) {
         weatherJSON.daily[i] = {day: x.forecast.forecastday[i + 1].date,
                                 dayTemp: x.forecast.forecastday[i + 1].day.avgtemp_c,
                                 dayCon: x.forecast.forecastday[i + 1].day.condition.text}
