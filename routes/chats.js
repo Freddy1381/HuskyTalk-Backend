@@ -15,12 +15,12 @@ let isStringProvided = validation.isStringProvided
  */ 
 
 /**
- * @api {post} /chats Request to add a chat
+ * @api {post} /chats Request to add an individual chat and the two users
  * @apiName PostChats
  * @apiGroup Chats
  * 
  * @apiHeader {String} authorization Valid JSON Web Token JWT
- * @apiParam {String} name the name for the chat
+ * @apiParam {String} email address array
  * 
  * @apiSuccess (Success 201) {boolean} success true when the name is inserted
  * @apiSuccess (Success 201) {Number} chatId the generated chatId
@@ -36,32 +36,74 @@ let isStringProvided = validation.isStringProvided
  * @apiUse JSONError
  */ 
 router.post("/", (request, response, next) => {
-    if (!isStringProvided(request.body.name)) {
+    if (!request.params.email.length != 2) {
         response.status(400).send({
             message: "Missing required information"
         })
     } else {
         next()
     }
-}, (request, response) => {
+}, (request, response, next) => {
+    //validate email exists AND convert it to the associated memberId
+    let query = 'SELECT MemberID, Username FROM Members WHERE Email IN ($1, $2)'
+    let values = [request.params.email[0], request.params.email[1]]
 
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount != 2) {
+                response.status(404).send({
+                    message: "email not found"
+                })
+            } else {
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+}, (request, response) => {
+    let chatId
     let insert = `INSERT INTO Chats(Name)
                   VALUES ($1)
                   RETURNING ChatId`
-    let values = [request.body.name]
+    let values = ['']
     pool.query(insert, values)
         .then(result => {
-            response.send({
-                success: true,
-                chatID:result.rows[0].chatid
+            chatId = result.rows[0].chatid;
+            let query = 'SELECT MemberID, Username FROM Members WHERE Email IN ($1, $2)'
+            let values = [request.params.email[0], request.params.email[1]]
+            pool.query(query, values)
+                .then(result => {
+                    let values = [chatId, result.rows[0].memberid ,chatId , result.rows[1].memberid]
+                    let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
+                    VALUES ($1, $2). ($3, $4)
+                    RETURNING *`
+                    pool.query(insert, values)
+                        .then(result => {
+                            response.send({
+                                success: true,
+                                chatID:chatId
+                            })
+                        }).catch(err => {
+                            response.status(400).send({
+                                message: "SQL Error",
+                                error: err
+                            })  
+                        })          
+            }).catch(err => {
+                response.status(400).send({
+                    message: "SQL Error",
+                    error: err
+                })
             })
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error",
                 error: err
+                })
             })
-
-        })
 })
 
 /**
@@ -488,6 +530,76 @@ router.delete("/:chatId", (request, response, next) => {
                         error: err
                     })
                 })
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+            })
+        })
+})
+
+/**
+ * @api {delete} /chats/:chatId?/messages Request to clear chat of messages
+ * @apiName DeleteChats
+ * @apiGroup Chats
+ * 
+ * @apiDescription Deletes the messages of the specified chat.
+ * 
+ * @apiHeader {String} authorization Valid JSON Web Token JWT
+ * 
+ * @apiParam {Number} chatId the chat to delete the messages from
+ * 
+ * @apiSuccess {boolean} success true when the chat and messages are deleted
+ * 
+ * @apiError (404: Chat Not Found) {String} message "chatID not found"
+ * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+router.delete("/:chatId/clear", (request, response, next) => {
+    //validate on empty parameters
+    if (!request.params.chatId) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    } else if (isNaN(request.params.chatId)) {
+        response.status(400).send({
+            message: "Malformed parameter. chatId must be a number"
+        })
+    } else {
+        next()
+    }
+}, (request, response, next) => {
+    //validate chat id exists
+    let query = 'SELECT * FROM CHATS WHERE ChatId=$1'
+    let values = [request.params.chatId]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(404).send({
+                    message: "Chat ID not found"
+                })
+            } else {
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+}, (request, response) => {
+    let query = 'DELETE FROM MESSAGES WHERE ChatId=$1'
+    let values = [request.params.chatId]
+
+    pool.query(query, values)
+        .then(result => {
+            response.send({
+                success: true
+            })
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error",
