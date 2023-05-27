@@ -101,48 +101,6 @@ router.put("/:chatId/", (request, response, next) => {
         next()
     }
 }, (request, response, next) => {
-    //validate chat id exists
-    let query = 'SELECT * FROM CHATS WHERE ChatId=$1'
-    let values = [request.params.chatId]
-
-    pool.query(query, values)
-        .then(result => {
-            if (result.rowCount == 0) {
-                response.status(404).send({
-                    message: "Chat ID not found"
-                })
-            } else {
-                next()
-            }
-        }).catch(error => {
-            response.status(400).send({
-                message: "SQL Error",
-                error: error
-            })
-        })
-        //code here based on the results of the query
-}, (request, response, next) => {
-    //validate email exists 
-    let query = 'SELECT * FROM Members WHERE MemberId=$1'
-    let values = [request.decoded.memberid]
-
-    pool.query(query, values)
-        .then(result => {
-            if (result.rowCount == 0) {
-                response.status(404).send({
-                    message: "email not found"
-                })
-            } else {
-                //user found
-                next()
-            }
-        }).catch(error => {
-            response.status(400).send({
-                message: "SQL Error",
-                error: error
-            })
-        })
-}, (request, response, next) => {
         //validate email does not already exist in the chat
         let query = 'SELECT * FROM ChatMembers WHERE ChatId=$1 AND MemberId=$2'
         let values = [request.params.chatId, request.decoded.memberid]
@@ -361,21 +319,21 @@ router.delete("/:chatId/:email", (request, response, next) => {
     let insert = `DELETE FROM ChatMembers
                   WHERE ChatId=$1
                   AND MemberId=$2
-                  RETURNING *`
-    let values = [request.params.chatId, request.params.email]
+                  RETURNING *`;
+    let values = [request.params.chatId, request.params.email];
     pool.query(insert, values)
         .then(result => {
             response.send({
                 success: true
-            })
+            });
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error",
                 error: err
-            })
-        })
+            });
+        });
     }
-)
+);
 
 /**
  * @api {get} /chats/ Request to get the list of chats
@@ -391,9 +349,68 @@ router.delete("/:chatId/:email", (request, response, next) => {
  * @apiUse JSONError
  */ 
 router.get('/',(request, response) => {
-    let query = 'SELECT ChatId, Name FROM Chats'
+    let query = 'SELECT ChatId, Name FROM Chats';
     
     pool.query(query)
+        .then(result => {
+            response.status(200).send({
+                success: true,
+                chats: result.rows
+            });
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            });
+        });
+});
+
+/**
+ * @api {get} /chats/:chatId?/preview Request to get the chat name, preview, and timestamp of a chat
+ * @apiName GetChatPreview
+ * @apiGroup Chats
+ * 
+ * @apiHeader {String} authorization Valid JSON Web Token JWT
+ * 
+ * @apiParam {Number} chatId the chat to delete
+ * 
+ * @apiSuccess {String} chatname the name of the chat room
+ * @apiSuccess {String} preview most recent message of the chat room
+ * @apiSuccess {TimeStamp} timestamp timestamp of most recent message of the chat room
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+router.get('/preview/:chatId',(request, response, next) => {
+    let query = 'SELECT Name FROM Chats WHERE chatid=$1';
+    const values = [request.params.chatId]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount > 0) {
+                response.name = result.rows[0]
+                next()
+            } else {
+                response.status(400).send({
+                    message: "Chat not found."
+                })
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error at get chat name",
+                error: error
+            });
+        });
+}, (request, response) => {
+    let query = `SELECT Messages.message AS preview, Messages.TimeStamp, Chats.name AS chatname 
+                 FROM messages INNER JOIN Chats ON Chats.chatid=Messages.chatid 
+                 WHERE Chats.chatid=$1
+                 ORDER BY TimeStamp DESC LIMIT 1
+                 `;
+    let values = [request.params.chatId]
+    
+    pool.query(query, values)
         .then(result => {
             response.status(200).send({
                 success: true,
@@ -401,7 +418,7 @@ router.get('/',(request, response) => {
             })
         }).catch(error => {
             response.status(400).send({
-                message: "SQL Error",
+                message: "SQL Error at get preview",
                 error: error
             })
         })
