@@ -37,7 +37,7 @@ let usernames = [];
  * @apiUse JSONError
  */ 
 router.post("/", (request, response, next) => {
-    if (!request.params.email.length != 2) {
+    if (request.body.email.length != 2) {
         response.status(400).send({
             message: "Missing required information"
         });
@@ -46,9 +46,8 @@ router.post("/", (request, response, next) => {
     }
 }, (request, response, next) => {
     //validate email exists AND convert it to the associated memberId
-    let query = 'SELECT MemberID, Username FROM Members WHERE Email IN ($1, $2)';
-    let values = [request.params.email[0], request.params.email[1]];
-
+    let query = 'SELECT MemberID, Username FROM Members WHERE Email IN (\''+request.body.email[0]+'\',\''+ request.body.email[1] +'\')';
+    let values = [];
     pool.query(query, values)
         .then(result => {
             if (result.rowCount != 2) {
@@ -56,8 +55,9 @@ router.post("/", (request, response, next) => {
                     message: "email not found"
                 });
             } else {
-                usernames.push[result.rowCount[0].username];
-                usernames.push[result.rowCount[1].username];
+                let username1 = result.rows[0].username.localeCompare(result.rows[1].username) == 1 ? result.rows[1].username : result.rows[0].username;
+                let username2 = result.rows[0].username.localeCompare(result.rows[1].username) == 1 ? result.rows[0].username : result.rows[1].username;
+                usernames = [username1, username2];
                 next();
             }
         }).catch(error => {
@@ -66,6 +66,24 @@ router.post("/", (request, response, next) => {
                 error: error
             });
         })
+}, (request, response, next) =>{
+    let query = 'SELECT * FROM Chats WHERE name = \'' + usernames[0] + '.' + usernames[1] + '\'';
+    let values =[];
+    pool.query(query, values)
+        .then(result => {
+            if(result.rowCount != 0) {
+                response.status(400).send({
+                    message: "chat already exists"
+                });
+            } else {
+                next();
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error11",
+                error: error
+            });
+        });
 }, (request, response) => {
     let chatId;
     let insert = `INSERT INTO Chats(Name)
@@ -76,7 +94,7 @@ router.post("/", (request, response, next) => {
         .then(result => {
             chatId = result.rows[0].chatid;
             let query = 'SELECT MemberID, Username FROM Members WHERE Email IN ($1, $2)';
-            let values = [request.params.email[0], request.params.email[1]];
+            let values = [request.body.email[0], request.body.email[1]];
             pool.query(query, values)
                 .then(result => {
                     let values = [chatId, result.rows[0].memberid ,chatId , result.rows[1].memberid];
