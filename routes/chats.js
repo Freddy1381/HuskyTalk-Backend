@@ -95,7 +95,7 @@ router.put("/:chatId/", (request, response, next) => {
         })
     } else if (isNaN(request.params.chatId)) {
         response.status(400).send({
-            message: "Malformed parameter. chatId must be a number"
+            message: "Malformed parameter. chatId must be a number. PUT /chatid got called"
         })
     } else {
         next()
@@ -170,7 +170,7 @@ router.get("/:chatId", (request, response, next) => {
         })
     } else if (isNaN(request.params.chatId)) {
         response.status(400).send({
-            message: "Malformed parameter. chatId must be a number"
+            message: "Malformed parameter. chatId must be a number. /chatid got called"
         })
     } else {
         next()
@@ -247,7 +247,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
         })
     } else if (isNaN(request.params.chatId)) {
         response.status(400).send({
-            message: "Malformed parameter. chatId must be a number"
+            message: "Malformed parameter. chatId must be a number. chatid/email got called"
         })
     } else {
         next()
@@ -364,65 +364,6 @@ router.get('/',(request, response) => {
             });
         });
 });
-
-/**
- * @api {get} /chats/:chatId?/preview Request to get the chat name, preview, and timestamp of a chat
- * @apiName GetChatPreview
- * @apiGroup Chats
- * 
- * @apiHeader {String} authorization Valid JSON Web Token JWT
- * 
- * @apiParam {Number} chatId the chat to delete
- * 
- * @apiSuccess {String} chatname the name of the chat room
- * @apiSuccess {String} preview most recent message of the chat room
- * @apiSuccess {TimeStamp} timestamp timestamp of most recent message of the chat room
- * 
- * @apiError (400: SQL Error) {String} message the reported SQL error details
- * 
- * @apiUse JSONError
- */ 
-router.get('/preview/:chatId',(request, response, next) => {
-    let query = 'SELECT Name FROM Chats WHERE chatid=$1';
-    const values = [request.params.chatId]
-
-    pool.query(query, values)
-        .then(result => {
-            if (result.rowCount > 0) {
-                response.name = result.rows[0]
-                next()
-            } else {
-                response.status(400).send({
-                    message: "Chat not found."
-                })
-            }
-        }).catch(error => {
-            response.status(400).send({
-                message: "SQL Error at get chat name",
-                error: error
-            });
-        });
-}, (request, response) => {
-    let query = `SELECT Messages.message AS preview, Messages.TimeStamp, Chats.name AS chatname 
-                 FROM messages INNER JOIN Chats ON Chats.chatid=Messages.chatid 
-                 WHERE Chats.chatid=$1
-                 ORDER BY TimeStamp DESC LIMIT 1
-                 `;
-    let values = [request.params.chatId]
-    
-    pool.query(query, values)
-        .then(result => {
-            response.status(200).send({
-                success: true,
-                chats: result.rows
-            })
-        }).catch(error => {
-            response.status(400).send({
-                message: "SQL Error at get preview",
-                error: error
-            })
-        })
-})
 
 /**
  * @api {delete} /chats/:chatId?/ Request delete a chat along with all the messages

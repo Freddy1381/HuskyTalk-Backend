@@ -34,7 +34,9 @@ app.use('/messages', middleware.checkToken, require('./routes/messages.js'))
 
 app.use('/chats', middleware.checkToken, require('./routes/chats.js'))
 
-// app.use('/auth', middleware.checkToken, require('./routes/pushyregister.js'))
+app.use('/previews', middleware.checkToken, require('./routes/previews.js'))
+
+app.use('/auth', middleware.checkToken, require('./routes/pushyregister.js'))
 /*
  * Return HTML for the / end point.
  * This is a nice location to document your web service API
