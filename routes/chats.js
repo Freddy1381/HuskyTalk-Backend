@@ -80,7 +80,7 @@ router.post("/", (request, response, next) => {
             }
         }).catch(error => {
             response.status(400).send({
-                message: "SQL Error11",
+                message: "SQL Error",
                 error: error
             });
         });
@@ -627,4 +627,135 @@ router.delete("/:chatId/clear", (request, response, next) => {
         })
 });
 
-module.exports = router
+/**
+ * @apiDefine JSONError
+ * @apiError (400: JSON Error) {String} message "malformed JSON in parameters"
+ */ 
+
+/**
+ * @api {post} /chats/global Request to add a global chat and the two users
+ * @apiName PostChats
+ * @apiGroup Chats
+ * 
+ * @apiHeader {String} authorization Valid JSON Web Token JWT
+ * @apiParam {String} email address array
+ * 
+ * @apiSuccess (Success 201) {boolean} success true when the name is inserted
+ * @apiSuccess (Success 201) {Number} chatId the generated chatId
+ * 
+ * @apiError (400: Unknown user) {String} message "unknown email address"
+ * 
+ * @apiError (400: Missing Parameters) {String} message "Missing required information"
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiError (400: Unknown Chat ID) {String} message "invalid chat id"
+ * 
+ * @apiUse JSONError
+ */ 
+router.post("/global", (request, response, next) => {
+    if (request.body.email.length == 0) {
+        response.status(400).send({
+            message: "Missing required information"
+        });
+    } else {
+        next();
+    }
+}, (request, response, next) => {
+    //validate email exists AND convert it to the associated memberId
+    let query = 'SELECT MemberID, Username FROM Members WHERE Email IN (';
+    let values = [];
+    for(i = 0; i < request.body.email.length; i++) {
+        if((i+1) == request.body.email.length){
+            query += '$' + (i+1) + ')';
+        } else {
+            query += '$' + (i+1) + ',';
+        }
+        values.push(request.body.email[i])
+    }
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount != request.body.email.length) {
+                response.status(404).send({
+                    message: "email not found"
+                });
+            } else {
+                next();
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            });
+        })
+}, (request, response) => {
+    let chatId;
+    let insert = `INSERT INTO Chats(Name)
+                  VALUES ($1)
+                  RETURNING ChatId`;
+    let values = ['Global Chat '];
+    pool.query(insert, values)
+        .then(result => {
+            chatId = result.rows[0].chatid;
+            let query = 'SELECT MemberID, Username FROM Members WHERE Email IN (';
+            let values = [];
+            for(i = 0; i < request.body.email.length; i++) {
+                if((i+1) == request.body.email.length){
+                    query += '$' + (i+1) + ')';
+                } else {
+                    query += '$' + (i+1) + ',';
+                }
+                values.push(request.body.email[i])
+            }
+            pool.query(query, values)
+                .then(result => {
+                    let query = 'INSERT INTO ChatMembers(ChatId, MemberId) VALUES ';
+                    let values = [];
+                    for(i = 0; i < result.rows.length; i++) {
+                        if((i+1) == request.body.email.length){
+                            query += '($' + (i*2+1) + ', $' + (i*2+2) +')';
+                        } else {
+                            query += '($' + (i*2+1) + ', $' + (i*2+2) +'), ';
+                        }
+                        values.push(chatId);
+                        values.push(result.rows[i].memberid);
+                    }
+
+                    pool.query(query, values)
+                        .then(result => {
+                            let query = 'UPDATE Chats Set name = \'Global Chat '+ chatId+'\' WHERE chatid = '+chatId;
+                            let values = [];
+                            
+                            pool.query(query, values)
+                                .then(result => {
+                                    response.send({
+                                        success: true,
+                                        chatID:chatId
+                                    });
+                                }).catch(err => {
+                                    response.status(400).send({
+                                        message: "SQL Error",
+                                        error: err
+                                    });
+                                });
+                        }).catch(err => {
+                            response.status(400).send({
+                                message: "SQL Error",
+                                error: err
+                            });
+                        })          
+            }).catch(err => {
+                response.status(400).send({
+                    message: "SQL Error",
+                    error: err
+                });
+            })
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+                });
+            })
+});
+
+module.exports = router;
