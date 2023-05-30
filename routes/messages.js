@@ -175,11 +175,11 @@ router.post("/", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
-router.get("/:chatId?/:messageId?", (request, response, next) => {
+router.get("/:chatId/:messageId?", (request, response, next) => {
         //validate chatId is not empty or non-number
         if (request.params.chatId === undefined) {
             response.status(400).send({
-                message: "Missing required information"
+                message: "Missing required information at get messages with Chatid. "
             })
         }  else if (isNaN(request.params.chatId)) {
             response.status(400).send({
