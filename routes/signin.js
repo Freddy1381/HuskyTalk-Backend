@@ -28,7 +28,7 @@ const key = {
  *
  * @apiSuccess {boolean} success true when the name is found and password matches
  * @apiSuccess {String} message "Authentication successful!"
- * @apiSuccess {String} token JSON Web Token
+ * @apiSuccess {JWT} token JSON Web Token
  *
  *  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK

@@ -6,6 +6,8 @@ dotenv.config({
 });
 
 module.exports = {
+  BURNER_EMAIL: process.env.BURNER_EMAIL || undefined, 
+  BURNER_EMAIL_PASSWRD: process.env.BURNER_EMAIL_PASSWRD || undefined, 
   WEATHER_API_KEY: process.env.WEATHER_API_KEY || "default",
   NODE_ENV: process.env.NODE_ENV || "default",
   PORT: process.env.PORT || 5000,
@@ -20,5 +22,6 @@ module.exports = {
             rejectUnauthorized: false,
           },
         },
-  JSON_WEB_TOKEN: process.env.JSON_WEB_TOKEN || undefined
+  JSON_WEB_TOKEN: process.env.JSON_WEB_TOKEN || undefined, 
+  PUSHY_API_KEY: process.env.PUSHY_API_KEY || undefined
 };

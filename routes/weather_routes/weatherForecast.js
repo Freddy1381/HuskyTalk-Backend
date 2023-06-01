@@ -56,6 +56,7 @@ function fillJSON(x) {
     weatherJSON.current.cityName = x.location.name;
     weatherJSON.current.currTemp = x.current.temp_c;
     weatherJSON.current.currCon = x.current.condition.text;
+    weatherJSON.current.currImg = x.current.condition.icon;
 
     //fill JSON property array for 24 hour forecast for current day
     for(let i = 0; i < 24; i++) {
@@ -64,10 +65,10 @@ function fillJSON(x) {
 
     }
     //fill JSON property array for 7 day forecast past current day
-    for(let i = 0; i < 6; i++) {
-        weatherJSON.daily[i] = {day: x.forecast.forecastday[i + 1].date,
-                                dayTemp: x.forecast.forecastday[i + 1].day.avgtemp_c,
-                                dayCon: x.forecast.forecastday[i + 1].day.condition.text}
+    for(let i = 0; i < 7; i++) {
+        weatherJSON.daily[i] = {day: x.forecast.forecastday[i].date,
+                                dayTemp: x.forecast.forecastday[i].day.avgtemp_c,
+                                dayCon: x.forecast.forecastday[i].day.condition.text}
     }
     console.log(weatherJSON);
 

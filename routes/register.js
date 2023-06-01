@@ -132,7 +132,7 @@ router.post(
     let values = [request.memberid, salted_hash, salt];
     const token = jwt.sign(
       { data: 'Token Data' }, 
-      'ourSecretKey', { expiresIn: '10m' });
+      'ourSecretKey', { expiresIn: '7d' });
     pool
       .query(theQuery, values)
       .then((result) => {

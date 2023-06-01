@@ -175,11 +175,11 @@ router.post("/", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
-router.get("/:chatId?/:messageId?", (request, response, next) => {
+router.get("/:chatId/:messageId?", (request, response, next) => {
         //validate chatId is not empty or non-number
         if (request.params.chatId === undefined) {
             response.status(400).send({
-                message: "Missing required information"
+                message: "Missing required information at get messages with Chatid. "
             })
         }  else if (isNaN(request.params.chatId)) {
             response.status(400).send({
@@ -238,6 +238,96 @@ router.get("/:chatId?/:messageId?", (request, response, next) => {
                     error: err
                 })
             })
+});
+
+/**
+ * @api {get} /messages/:chatId?/preview Request to get the most recent chat message
+ * @apiName GetMessagePreview
+ * @apiGroup Messages
+ * 
+ * @apiDescription Request to get the most recent chat message
+ * from the server in a given chat - chatId. 
+ * 
+ * @apiParam {Number} chatId the chat to look up. 
+ * 
+ * @apiSuccess {Number} rowCount the number of messages returned
+ * @apiSuccess {Object[]} messages List of massages in the message table
+ * @apiSuccess {String} messages.messageId The id for this message
+ * @apiSuccess {String} messages.email The email of the user who posted this message
+ * @apiSuccess {String} messages.message The message text
+ * @apiSuccess {String} messages.timestamp The timestamp of when this message was posted
+ * 
+ * @apiError (404: ChatId Not Found) {String} message "Chat ID Not Found"
+ * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
+ * @apiError (400: Missing Parameters) {String} message "Missing required information"
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+router.get("/:chatId?/:messageId?", (request, response, next) => {
+    //validate chatId is not empty or non-number
+    if (request.params.chatId === undefined) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    }  else if (isNaN(request.params.chatId)) {
+        response.status(400).send({
+            message: "Malformed parameter. chatId must be a number"
+        })
+    } else {
+        next()
+    }
+}, (request, response, next) => {
+    //validate that the ChatId exists
+    let query = 'SELECT * FROM CHATS WHERE ChatId=$1'
+    let values = [request.params.chatId]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(404).send({
+                    message: "Chat ID not found"
+                })
+            } else {
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+}, (request, response) => {
+    //perform the Select
+
+    if (!request.params.messageId) {
+        //no messageId provided. Use the largest possible integer value
+        //allowed for the messageId in the db table. 
+        request.params.messageId = 2**31 - 1
+    }
+
+    let query = `SELECT Messages.PrimaryKey AS messageId, Members.Email, Messages.Message, 
+                to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
+                FROM Messages
+                INNER JOIN Members ON Messages.MemberId=Members.MemberId
+                WHERE ChatId=$1 AND Messages.PrimaryKey < $2
+                ORDER BY Timestamp DESC
+                LIMIT 1`
+    let values = [request.params.chatId, request.params.messageId]
+    pool.query(query, values)
+        .then(result => {
+            response.send({
+                chatId: request.params.chatId,
+                rowCount : result.rowCount,
+                rows: result.rows
+            })
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: err
+            })
+        })
 });
 
 module.exports = router

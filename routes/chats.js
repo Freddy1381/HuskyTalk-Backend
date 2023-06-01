@@ -158,7 +158,7 @@ router.put("/:chatId/", (request, response, next) => {
         });
     } else if (isNaN(request.params.chatId)) {
         response.status(400).send({
-            message: "Malformed parameter. chatId must be a number"
+            message: "Malformed parameter. chatId must be a number. PUT /chatid got called"
         });
     } else {
         next();
@@ -274,7 +274,7 @@ router.get("/:chatId", (request, response, next) => {
         });
     } else if (isNaN(request.params.chatId)) {
         response.status(400).send({
-            message: "Malformed parameter. chatId must be a number"
+            message: "Malformed parameter. chatId must be a number. /chatid got called"
         });
     } else {
         next();
@@ -351,7 +351,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
         });
     } else if (isNaN(request.params.chatId)) {
         response.status(400).send({
-            message: "Malformed parameter. chatId must be a number"
+            message: "Malformed parameter. chatId must be a number. chatid/email got called"
         });
     } else {
         next();
@@ -435,7 +435,7 @@ router.delete("/:chatId/:email", (request, response, next) => {
                 message: "SQL Error",
                 error: err
             });
-        })
+        });
 });
 
 /**
@@ -465,7 +465,7 @@ router.get('/',(request, response) => {
                 message: "SQL Error",
                 error: error
             });
-        })
+        });
 });
 
 /**
