@@ -49,7 +49,7 @@ router.get('/',(request, response, next) => {
         });
 }, (request, response) => {
     let query = `SELECT M.chatid, M.message, 
-                 to_char(M.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp 
+                 to_char(M.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS' ) AS Timestamp 
                  FROM Messages M 
                  JOIN (SELECT chatid, MAX(TimeStamp) latest_message FROM Messages GROUP BY chatid) C 
                  ON M.chatid=C.chatid AND M.TimeStamp=C.latest_message ORDER BY M.chatid
