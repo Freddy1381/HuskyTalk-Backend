@@ -163,7 +163,7 @@ router.post("/", (request, response, next) => {
  * @apiSuccess {Number} rowCount the number of messages returned
  * @apiSuccess {Object[]} messages List of massages in the message table
  * @apiSuccess {String} messages.messageId The id for this message
- * @apiSuccess {String} messages.email The email of the user who posted this message
+ * @apiSuccess {String} messages.username The username of the user who posted this message
  * @apiSuccess {String} messages.message The message text
  * @apiSuccess {String} messages.timestamp The timestamp of when this message was posted
  * 
@@ -217,7 +217,7 @@ router.get("/:chatId/:messageId?", (request, response, next) => {
             request.params.messageId = 2**31 - 1
         }
 
-        let query = `SELECT Messages.PrimaryKey AS messageId, Members.Email, Messages.Message, 
+        let query = `SELECT Messages.PrimaryKey AS messageId, Members.Username, Messages.Message, 
                     to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS' ) AS Timestamp
                     FROM Messages
                     INNER JOIN Members ON Messages.MemberId=Members.MemberId
@@ -253,7 +253,7 @@ router.get("/:chatId/:messageId?", (request, response, next) => {
  * @apiSuccess {Number} rowCount the number of messages returned
  * @apiSuccess {Object[]} messages List of massages in the message table
  * @apiSuccess {String} messages.messageId The id for this message
- * @apiSuccess {String} messages.email The email of the user who posted this message
+ * @apiSuccess {String} messages.username The username of the user who posted this message
  * @apiSuccess {String} messages.message The message text
  * @apiSuccess {String} messages.timestamp The timestamp of when this message was posted
  * 
@@ -307,7 +307,7 @@ router.get("/:chatId?/:messageId?", (request, response, next) => {
         request.params.messageId = 2**31 - 1
     }
 
-    let query = `SELECT Messages.PrimaryKey AS messageId, Members.Email, Messages.Message, 
+    let query = `SELECT Messages.PrimaryKey AS messageId, Members.Username, Messages.Message, 
                 to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
                 FROM Messages
                 INNER JOIN Members ON Messages.MemberId=Members.MemberId
