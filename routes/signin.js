@@ -116,6 +116,7 @@ router.get(
           let token = jwt.sign(
             {
               email: request.auth.email,
+              username: result.rows[0].username, 
               memberid: result.rows[0].memberid,
             },
             key.secret,
