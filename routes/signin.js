@@ -84,7 +84,7 @@ router.get(
     }
   },
   (request, response) => {
-    const theQuery = `SELECT saltedhash, salt, Credentials.memberid, Members.verification FROM Credentials
+    const theQuery = `SELECT saltedhash, salt, Credentials.memberid, Members.verification, Members.Username FROM Credentials
                       INNER JOIN Members ON
                       Credentials.memberid=Members.memberid 
                       WHERE Members.email=$1`;
@@ -127,6 +127,7 @@ router.get(
           response.json({
             success: true,
             message: "Authentication successful!",
+            username: result.rows[0].username, 
             token: token,
           });
         } else if (ver == 0) {
