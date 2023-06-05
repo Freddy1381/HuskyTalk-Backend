@@ -19,6 +19,7 @@
   "author": "TCSS 450 Group 8",
   "license": "MIT",
   "dependencies": {
+    "apidoc": "^1.0.3",
     "dotenv": "^16.0.3",
     "express": "^4.17.1",
     "form-data": "^3.0.0",
