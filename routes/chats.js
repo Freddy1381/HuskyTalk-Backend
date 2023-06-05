@@ -8,7 +8,6 @@ const router = express.Router();
 
 const validation = require('../utilities').validation;
 let isStringProvided = validation.isStringProvided;
-let usernames = [];
 
 /**
  * @apiDefine JSONError
@@ -21,7 +20,8 @@ let usernames = [];
  * @apiGroup Chats
  * 
  * @apiHeader {String} authorization Valid JSON Web Token JWT
- * @apiParam {String} email address array
+ * @apiParam {String} email address
+ * @apiParam {String} name chat name
  * 
  * @apiSuccess (Success 201) {boolean} success true when the name is inserted
  * @apiSuccess (Success 201) {Number} chatId the generated chatId
@@ -37,7 +37,7 @@ let usernames = [];
  * @apiUse JSONError
  */ 
 router.post("/", (request, response, next) => {
-    if (request.body.email.length != 2) {
+    if (!isStringProvided(request.body.email)) {
         response.status(400).send({
             message: "Missing required information"
         });
@@ -46,29 +46,28 @@ router.post("/", (request, response, next) => {
     }
 }, (request, response, next) => {
     //validate email exists AND convert it to the associated memberId
-    let query = 'SELECT MemberID, Username FROM Members WHERE Email IN (\''+request.body.email[0]+'\',\''+ request.body.email[1] +'\')';
-    let values = [];
+    //let query = 'SELECT MemberID, Username FROM Members WHERE Email IN (\''+request.body.email[0]+'\',\''+ request.body.email[1] +'\')';
+    let query = `SELECT memberid FROM Members WHERE Email = $1`;
+    let values = [request.body.email];
     pool.query(query, values)
         .then(result => {
-            if (result.rowCount != 2) {
+            if (result.rowCount = 0) {
                 response.status(404).send({
                     message: "email not found"
                 });
             } else {
-                let username1 = result.rows[0].username.localeCompare(result.rows[1].username) == 1 ? result.rows[1].username : result.rows[0].username;
-                let username2 = result.rows[0].username.localeCompare(result.rows[1].username) == 1 ? result.rows[0].username : result.rows[1].username;
-                usernames = [username1, username2];
+                request.memberid = result.rows[0].memberid
                 next();
             }
         }).catch(error => {
             response.status(400).send({
-                message: "SQL Error",
+                message: "SQL Error at email validation",
                 error: error
             });
         })
 }, (request, response, next) =>{
-    let query = 'SELECT * FROM Chats WHERE name = \'' + usernames[0] + '.' + usernames[1] + '\'';
-    let values =[];
+    let query = 'SELECT chatid FROM chatmembers CM GROUP BY chatid HAVING count(*) = 2 AND count(*) FILTER (WHERE CM.memberid = $1) = 1 AND count(*) FILTER (WHERE CM.memberid = $2) = 1';
+    let values = [request.decoded.memberid, request.memberid];
     pool.query(query, values)
         .then(result => {
             if(result.rowCount != 0) {
@@ -80,7 +79,7 @@ router.post("/", (request, response, next) => {
             }
         }).catch(error => {
             response.status(400).send({
-                message: "SQL Error",
+                message: "SQL Error at check chat already exist",
                 error: error
             });
         });
@@ -89,39 +88,47 @@ router.post("/", (request, response, next) => {
     let insert = `INSERT INTO Chats(Name)
                   VALUES ($1)
                   RETURNING ChatId`;
-    let values = [usernames[0] + '.' + usernames[1]];
+    let values = [request.body.name];
     pool.query(insert, values)
         .then(result => {
             chatId = result.rows[0].chatid;
             let query = 'SELECT MemberID, Username FROM Members WHERE Email IN ($1, $2)';
-            let values = [request.body.email[0], request.body.email[1]];
+            let values = [request.decoded.email, request.body.email];
             pool.query(query, values)
                 .then(result => {
                     let values = [chatId, result.rows[0].memberid ,chatId , result.rows[1].memberid];
                     let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
-                    VALUES ($1, $2), ($3, $4)
-                    RETURNING *`;
+                                  VALUES ($1, $2), ($3, $4)
+                                  RETURNING *`;
                     pool.query(insert, values)
                         .then(result => {
-                            response.send({
-                                success: true,
-                                chatID:chatId
-                            });
+                            let query = 'INSERT INTO Messages (ChatId, Message, MemberId) VALUES ($1, $2, $3)';
+                            let values = [chatId, '', request.decoded.memberid]
+                            pool.query(query, values)
+                                .then(response.send({success: true,
+                                                     chatID: chatId}))
+                                .catch(err => {
+                                    response.status(400).send({
+                                        message:"SQL Error at insert into messages", 
+                                        error: err
+                                    });
+                                });
+                            
                         }).catch(err => {
                             response.status(400).send({
-                                message: "SQL Error",
+                                message: "SQL Error at insert into chatmembers",
                                 error: err
                             });
                         })          
             }).catch(err => {
                 response.status(400).send({
-                    message: "SQL Error",
+                    message: "SQL Error at select memberid and username",
                     error: err
                 });
             })
         }).catch(err => {
             response.status(400).send({
-                message: "SQL Error",
+                message: "SQL Error at insert into chats",
                 error: err
                 });
             })
